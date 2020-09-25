@@ -26,6 +26,48 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
+func TestGetBalance(t *testing.T) {
+	f, err := cass.NewFactory(factoryConf)
+	assert.Nil(t, err)
+	request := f.NewRequest(cass.M.GetBalance)
+	request.BizParam = map[string]interface{}{}
+	response, err := request.Send()
+	assert.Nil(t, err)
+	assert.NotNil(t, response)
+	assert.Equal(t, 200, response.StatusCode)
+	t.Log(response.String())
+}
+
+func BenchmarkOneBankPayParallel(b *testing.B) {
+	f, err := cass.NewFactory(factoryConf)
+	assert.Nil(b, err)
+	b.RunParallel(func(pb *testing.PB) {
+		var buf bytes.Buffer
+		for pb.Next() {
+			buf.Reset()
+			request := f.NewRequest(cass.M.PayOneBankRemit)
+			request.BizParam = map[string]interface{}{
+				"payChannelK": "1",
+				//"payeeChannelType": "2",
+				"orderData": [1]interface{}{
+					map[string]interface{}{
+						"orderSN":          uuid.New().String(),
+						"receiptFANO":      "13517210601",
+						"payeeAccount":     "詹光",
+						"requestPayAmount": "0.01",
+						"notifyUrl":        "http://www.baidu.com/a/b?a=b",
+					},
+				},
+			}
+			response, err := request.Send()
+			assert.Nil(b, err)
+			assert.NotNil(b, response)
+			assert.Equal(b, 200, response.StatusCode)
+			b.Log(response.String())
+		}
+	})
+}
+
 func TestOneBankPay(t *testing.T) {
 	f, err := cass.NewFactory(factoryConf)
 	assert.Nil(t, err)

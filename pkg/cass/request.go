@@ -151,6 +151,7 @@ func (request *Request) Send() (*Response, error) {
 		"application/html; charset=utf-8",
 		strings.NewReader(query),
 	)
+
 	if err != nil {
 		return nil, err
 	}

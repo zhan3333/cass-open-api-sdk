@@ -83,6 +83,9 @@ func (f *Factory) NewResponse(resp *http.Response, responseKey string) *Response
 	response.Body, _ = ioutil.ReadAll(resp.Body)
 	response.Json = string(response.Body)
 	_ = json.Unmarshal(response.Body, &response.Map)
+	if _, ok := response.Map[responseKey]; !ok {
+		return response
+	}
 	response.Code = response.Map[responseKey].(map[string]interface{})["code"].(string)
 	response.Content = response.Map[responseKey].(map[string]interface{})["content"].(string)
 	response.Message = response.Map[responseKey].(map[string]interface{})["message"].(string)
