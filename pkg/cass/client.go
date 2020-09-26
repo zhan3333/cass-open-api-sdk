@@ -89,6 +89,8 @@ func (f *Factory) NewResponse(resp *http.Response, responseKey string) *Response
 	response.Code = response.Map[responseKey].(map[string]interface{})["code"].(string)
 	response.Content = response.Map[responseKey].(map[string]interface{})["content"].(string)
 	response.Message = response.Map[responseKey].(map[string]interface{})["message"].(string)
+	response.SubCode = response.Map[responseKey].(map[string]interface{})["subCode"].(string)
+	response.SubMsg = response.Map[responseKey].(map[string]interface{})["subMsg"].(string)
 	response.Sign = response.Map["sign"].(string)
 	return response
 }
