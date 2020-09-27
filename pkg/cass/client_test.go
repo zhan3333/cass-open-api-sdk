@@ -125,7 +125,7 @@ func TestMaYiBankPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "付款通道 不能为空。",
+				SubMsg:     "付款通道不能为空",
 			},
 		},
 		// 无收款通道
@@ -148,7 +148,7 @@ func TestMaYiBankPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "收款通道 不能为空。",
+				SubMsg:     "收款通道不能为空",
 			},
 		},
 		// 无订单数据
@@ -171,7 +171,7 @@ func TestMaYiBankPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "订单数据 不能为空。",
+				SubMsg:     "订单数据不能为空",
 			},
 		},
 		// 收款通道错误
@@ -194,7 +194,7 @@ func TestMaYiBankPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "已选的属性 收款通道 非法。",
+				SubMsg:     "已选的属性收款通道非法",
 			},
 		},
 		// 错误的收款账号 (错误的银行卡)
@@ -217,7 +217,7 @@ func TestMaYiBankPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "收款人账号格式错误，不是一个有效的银行卡号或者银行户口号。",
+				SubMsg:     "收款人账号格式错误，不是一个有效的银行卡号或者银行户口号",
 			},
 		},
 		// 错误的收款账号(错误的银行卡2)
@@ -358,7 +358,7 @@ func TestMaYiBanPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "付款通道 不能为空。",
+				SubMsg:     "付款通道不能为空",
 			},
 		},
 		// 无收款通道
@@ -381,7 +381,7 @@ func TestMaYiBanPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "收款通道 不能为空。",
+				SubMsg:     "收款通道不能为空",
 			},
 		},
 		// 无订单数据
@@ -404,7 +404,7 @@ func TestMaYiBanPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "订单数据 不能为空。",
+				SubMsg:     "订单数据不能为空",
 			},
 		},
 		// 收款通道错误
@@ -427,7 +427,7 @@ func TestMaYiBanPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "已选的属性 收款通道 非法。",
+				SubMsg:     "已选的属性收款通道非法",
 			},
 		},
 		// 错误的收款账号 (错误的银行卡)
@@ -450,7 +450,7 @@ func TestMaYiBanPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "收款人账号格式错误，不是一个有效的银行卡号或者银行户口号。",
+				SubMsg:     "收款人账号格式错误，不是一个有效的银行卡号或者银行户口号",
 			},
 		},
 		// 错误的收款账号(错误的银行卡2)
@@ -621,7 +621,7 @@ func TestWeChatPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "付款通道 不能为空。",
+				SubMsg:     "付款通道不能为空",
 			},
 		},
 		// 错误的支付通道
@@ -644,7 +644,7 @@ func TestWeChatPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "已选的属性 付款通道 非法。",
+				SubMsg:     "已选的属性付款通道非法",
 			},
 		},
 		// 无订单数据
@@ -666,7 +666,7 @@ func TestWeChatPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "订单数据 不能为空。",
+				SubMsg:     "订单数据不能为空",
 			},
 		},
 		// 支付通道错误
@@ -688,7 +688,7 @@ func TestWeChatPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "已选的属性 付款通道 非法。",
+				SubMsg:     "已选的属性付款通道非法",
 			},
 		},
 		// 手机号为空
@@ -710,7 +710,7 @@ func TestWeChatPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "收款人手机号 不能为空。",
+				SubMsg:     "收款人手机号不能为空",
 			},
 		},
 		// 错误的收款账号
@@ -732,7 +732,7 @@ func TestWeChatPayOne(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "收款人手机号不是一个有效的中国内地手机号码。",
+				SubMsg:     "收款人手机号不是一个有效的中国内地手机号码",
 			},
 		},
 		// 请求金额需要大于1元
@@ -827,7 +827,7 @@ func TestWeChatPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "付款通道 不能为空。",
+				SubMsg:     "付款通道不能为空",
 			},
 		},
 		// 错误的支付通道
@@ -850,7 +850,7 @@ func TestWeChatPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "已选的属性 付款通道 非法。",
+				SubMsg:     "已选的属性付款通道非法",
 			},
 		},
 		// 无订单数据
@@ -872,7 +872,7 @@ func TestWeChatPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "订单数据 不能为空。",
+				SubMsg:     "订单数据不能为空",
 			},
 		},
 		// 支付通道错误
@@ -894,7 +894,7 @@ func TestWeChatPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "已选的属性 付款通道 非法。",
+				SubMsg:     "已选的属性付款通道非法",
 			},
 		},
 		// 手机号为空
@@ -916,7 +916,7 @@ func TestWeChatPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "收款人手机号 不能为空。",
+				SubMsg:     "收款人手机号不能为空",
 			},
 		},
 		// 错误的收款账号
@@ -938,7 +938,7 @@ func TestWeChatPayBatch(t *testing.T) {
 				Code:       "50000",
 				Message:    "业务参数校验错误",
 				SubCode:    "api.common.error",
-				SubMsg:     "收款人手机号不是一个有效的中国内地手机号码。",
+				SubMsg:     "收款人手机号不是一个有效的中国内地手机号码",
 			},
 		},
 		// 请求金额需要大于1元
@@ -1054,7 +1054,7 @@ func TestMaYiBankPayNotAllowPayeeChannelType(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, response)
 	assert.Equal(t, 200, response.StatusCode)
-	assert.Equal(t, "已选的属性 收款通道 非法。", response.SubMsg)
+	assert.Equal(t, "已选的属性 收款通道 非法", response.SubMsg)
 	t.Log(response.String())
 }
 
