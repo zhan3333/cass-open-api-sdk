@@ -4,12 +4,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"go-skysharing-openapi/pkg/cass"
+	"go-skysharing-openapi/pkg/cass/context"
 	"os"
 	"strconv"
 	"testing"
 )
 
-func TestFactory_New(t *testing.T) {
+func TestFactory_NewRequest(t *testing.T) {
 	assert.Nil(t, godotenv.Load("../../.env"))
 	debug, _ := strconv.ParseBool(os.Getenv("DEBUG"))
 	var factoryConf = cass.Config{
@@ -24,4 +25,5 @@ func TestFactory_New(t *testing.T) {
 	cass.F, err = cass.NewClient(factoryConf)
 	assert.Nil(t, err)
 	assert.NotNil(t, cass.F)
+	_ = cass.F.NewRequest(context.GetBalance)
 }

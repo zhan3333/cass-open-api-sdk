@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"go-skysharing-openapi/pkg/cass"
+	"go-skysharing-openapi/pkg/cass/method"
 	"os"
 	"time"
 )
@@ -14,8 +15,8 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	factoryConf := cass.FactoryConf{
-		Uri:             os.Getenv("API_URL"),
+	factoryConf := cass.Config{
+		URI:             os.Getenv("API_URL"),
 		AppId:           os.Getenv("APPID"),
 		UserPublicKey:   os.Getenv("PUBLIC_KEY_STR"),
 		UserPrivateKey:  os.Getenv("PRIVATE_KEY_STR"),
@@ -23,7 +24,7 @@ func main() {
 	}
 	fmt.Printf("%v\n", factoryConf)
 
-	f, err := cass.NewFactory(factoryConf)
+	f, err := cass.NewClient(factoryConf)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -31,8 +32,8 @@ func main() {
 	for true {
 		count++
 		fmt.Printf("exec %d pay", count)
-		request := f.NewRequest(cass.M.PayOneBankRemit)
-		request.BizParam = map[string]interface{}{
+		request := f.NewRequest(method.M.PayOneBankRemit)
+		request.SetBizParams(map[string]interface{}{
 			"payChannelK": "1",
 			//"payeeChannelType": "2",
 			"orderData": [1]interface{}{
@@ -45,12 +46,12 @@ func main() {
 					"identityCard":     "420222199212041057",
 				},
 			},
-		}
-		response, err := request.Send()
-		if err != nil {
-			fmt.Printf("发生错误: %s \n", err.Error())
+		})
+		response := request.Send().(*cass.Response)
+		if response.Error() != nil {
+			fmt.Printf("发生错误: %s \n", response.Error().Error())
 		} else {
-			fmt.Printf("response code: %v \n", response.StatusCode)
+			fmt.Printf("response code: %v \n", response.HTTP.StatusCode)
 			fmt.Printf("response: %v \n", response.String())
 		}
 		time.Sleep(1 * time.Second)
