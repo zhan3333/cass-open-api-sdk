@@ -6,8 +6,6 @@ import (
 )
 
 type Methods struct {
-	GetOneRemitStatus    Method
-	GetOneOrderStatus    Method
 	PayBankRemit         Method
 	PayOneBankRemit      Method
 	PayWeChatRemit       Method
@@ -22,14 +20,6 @@ type Methods struct {
 }
 
 var M = Methods{
-	GetOneRemitStatus: Method{
-		Method: "Vzhuo.OneRemitStatus.Get",
-		Name:   "获取单个批次状态",
-	},
-	GetOneOrderStatus: Method{
-		Method: "Vzhuo.OneOrderStatus.Get",
-		Name:   "获取单个订单状态",
-	},
 	PayBankRemit: Method{
 		Method: "Vzhuo.BankRemit.Pay",
 		Name:   "银行卡实时下单",
@@ -37,10 +27,6 @@ var M = Methods{
 	PayWeChatRemit: Method{
 		Method: "Vzhuo.WeChatRemit.Pay",
 		Name:   "微信实时下单",
-	},
-	PayOneBankRemit: Method{
-		Method: "Vzhuo.OneBankRemit.Pay",
-		Name:   "单笔银行卡实时下单",
 	},
 	PayOneWeChatRemit: Method{
 		Method: "Vzhuo.OneWeChatRemit.Pay",

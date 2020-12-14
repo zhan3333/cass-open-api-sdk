@@ -105,7 +105,7 @@ func NewResponse(resp *http.Response, responseKey string, err error) Responder {
 		return &response
 	}
 	response.Code = response.HTTP.Params[responseKey].(map[string]interface{})["code"].(string)
-	response.Content = response.HTTP.Params[responseKey].(map[string]interface{})["content"].(string)
+	response.ContentStr = response.HTTP.Params[responseKey].(map[string]interface{})["content"].(string)
 	response.Message = response.HTTP.Params[responseKey].(map[string]interface{})["message"].(string)
 	response.SubCode = response.HTTP.Params[responseKey].(map[string]interface{})["subCode"].(string)
 	response.SubMsg = response.HTTP.Params[responseKey].(map[string]interface{})["subMsg"].(string)

@@ -1,7 +1,6 @@
 package go_openapi_test
 
 import (
-	"bytes"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
@@ -10,6 +9,7 @@ import (
 	"go-skysharing-openapi/pkg/cass/method"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -35,7 +35,7 @@ func TestGetBalance(t *testing.T) {
 	assert.Nil(t, err)
 	request := f.NewRequest(context.GetBalance)
 	request.SetBizParams(context.GetBalanceBiz{
-		PayChannelK: "1",
+		PayChannelK: context.PayChannelBank,
 	})
 	response := f.Send(request).(*cass.Response)
 	assert.Nil(t, response.Error())
@@ -45,90 +45,65 @@ func TestGetBalance(t *testing.T) {
 	assert.Equal(t, "请求成功", response.Message)
 	assert.Equal(t, "", response.SubCode)
 	assert.Equal(t, "", response.SubMsg)
-	t.Log(response.String())
-}
-
-// 压测付款
-func BenchmarkOneBankPayParallel(b *testing.B) {
-	f, err := cass.NewClient(factoryConf)
-	assert.Nil(b, err)
-	b.RunParallel(func(pb *testing.PB) {
-		var buf bytes.Buffer
-		for pb.Next() {
-			buf.Reset()
-			request := f.NewRequest(method.M.PayOneBankRemit)
-			request.SetBizParams(map[string]interface{}{
-				"payChannelK": "1",
-				//"payeeChannelType": "2",
-				"orderData": [1]interface{}{
-					map[string]interface{}{
-						"orderSN":          uuid.New().String(),
-						"receiptFANO":      "13517210601",
-						"payeeAccount":     "詹光",
-						"requestPayAmount": "0.01",
-						"notifyUrl":        "http://www.baidu.com/a/b?a=b",
-					},
-				},
-			})
-			response := f.Send(request).(*cass.Response)
-			assert.Nil(b, err)
-			assert.NotNil(b, response)
-			assert.Equal(b, 200, response.HTTP.StatusCode)
-			b.Log(response.String())
-		}
-	})
+	c := &context.GetBalanceContent{}
+	err = response.Content(c)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, c.Bank.Balance)
+	assert.NotEmpty(t, c.Bank.CanUseAmount)
+	assert.NotEmpty(t, c.Bank.LockedAmount)
 }
 
 // 测试单笔银行卡付款
 func TestOneBankPay(t *testing.T) {
 	f, err := cass.NewClient(factoryConf)
 	assert.Nil(t, err)
-	request := f.NewRequest(method.M.PayOneBankRemit)
-	request.SetBizParams(map[string]interface{}{
-		"payChannelK":      "1",
-		"payeeChannelType": "1",
-		"orderData": [1]interface{}{
-			map[string]interface{}{
-				"orderSN":          uuid.New().String(),
-				"receiptFANO":      "6214850278508756",
-				"payeeAccount":     "詹光",
-				"requestPayAmount": "0.01",
-				"notifyUrl":        "http://www.baidu.com/a/b?a=b",
-				"data":             "",
-			},
-		},
+	request := f.NewRequest(context.PayOneBank)
+	request.SetBizParams(context.PayOneBankBiz{
+		PayChannelK:      context.PayChannelBank,
+		PayeeChannelType: context.PayeeChannelBank,
+		OrderData: []context.PayOneBankOrder{{
+			OrderSN:          uuid.New().String(),
+			ReceiptFANO:      "6214850278508756",
+			PayeeAccount:     "詹光",
+			RequestPayAmount: "0.01",
+			NotifyUrl:        "http://localhost:8080",
+		}},
 	})
 	response := f.Send(request).(*cass.Response)
 	assert.Nil(t, err)
 	assert.NotNil(t, response)
 	assert.Equal(t, 200, response.HTTP.StatusCode)
 	t.Log(response.String())
+	c := &context.PayOneBankContent{}
+	err = response.Content(c)
+	assert.Nil(t, err)
+	t.Logf("%+v", c)
+	assert.NotEmpty(t, c.RBUUID)
 }
 
-func TestVerifyIDCardFailed(t *testing.T) {
+func TestOneAliPay(t *testing.T) {
 	f, err := cass.NewClient(factoryConf)
 	assert.Nil(t, err)
-	request := f.NewRequest(method.M.PayOneBankRemit)
-	request.SetBizParams(map[string]interface{}{
-		"payChannelK":      "1",
-		"payeeChannelType": "1",
-		"orderData": [1]interface{}{
-			map[string]interface{}{
-				"orderSN":          uuid.New().String(),
-				"receiptFANO":      "6214850278508756",
-				"payeeAccount":     "13517210601",
-				"identityCard":     "420222199212041057",
-				"requestPayAmount": "0.01",
-				"notifyUrl":        "http://www.baidu.com/a/b?a=b",
-				"data":             "",
-			},
-		},
+	request := f.NewRequest(context.PayOneBank)
+	request.SetBizParams(context.PayOneBankBiz{
+		PayChannelK:      context.PayChannelBank,
+		PayeeChannelType: context.PayeeChannelAliPay,
+		OrderData: []context.PayOneBankOrder{{
+			OrderSN:          uuid.New().String(),
+			ReceiptFANO:      "13517210601",
+			PayeeAccount:     "詹光",
+			RequestPayAmount: "0.01",
+			NotifyUrl:        "http://localhost:8080",
+		}},
 	})
 	response := f.Send(request).(*cass.Response)
 	assert.Nil(t, err)
 	assert.NotNil(t, response)
-	assert.Equal(t, 200, response.HTTP.StatusCode)
-	t.Log(response.String())
+	assert.True(t, response.IsSuccess())
+	c := &context.PayOneBankContent{}
+	err = response.Content(c)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, c.RBUUID)
 }
 
 // 测试单笔银行卡支付
@@ -350,13 +325,13 @@ func TestMaYiBankPayOneWithParamsFailed(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		request := f.NewRequest(method.M.PayOneBankRemit)
+		request := f.NewRequest(context.PayOneBank)
 		request.SetBizParams(tt.params)
 		response := f.Send(request).(*cass.Response)
 		assert.Nil(t, err)
 		assert.NotNil(t, response)
 		assert.Equal(t, tt.expectResp.HTTP.StatusCode, response.HTTP.StatusCode)
-		assert.Equal(t, tt.expectResp.Code, response.Code)
+		assert.Equal(t, tt.expectResp.Code, response.Code, tt)
 		assert.Equal(t, tt.expectResp.SubCode, response.SubCode)
 		assert.Equal(t, tt.expectResp.Message, response.Message)
 		assert.Equal(t, tt.expectResp.SubMsg, response.SubMsg)
@@ -364,7 +339,8 @@ func TestMaYiBankPayOneWithParamsFailed(t *testing.T) {
 	}
 }
 
-// 测试批量提交蚂蚁银行支付
+// 测试批量提交网商银行支付
+// 需要商户绑定通道为网商银行
 func TestMaYiBanPayBatch(t *testing.T) {
 	f, err := cass.NewClient(factoryConf)
 	assert.Nil(t, err)
@@ -612,17 +588,17 @@ func TestMaYiBanPayBatch(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for k, tt := range tests {
 		request := f.NewRequest(method.M.PayBankRemit)
 		request.SetBizParams(tt.params)
 		response := f.Send(request).(*cass.Response)
 		assert.Nil(t, err)
 		assert.NotNil(t, response)
-		assert.Equal(t, tt.expectResp.HTTP.StatusCode, response.HTTP.StatusCode)
-		assert.Equal(t, tt.expectResp.Code, response.Code)
-		assert.Equal(t, tt.expectResp.SubCode, response.SubCode)
-		assert.Equal(t, tt.expectResp.Message, response.Message)
-		assert.Equal(t, tt.expectResp.SubMsg, response.SubMsg)
+		assert.Equal(t, tt.expectResp.HTTP.StatusCode, response.HTTP.StatusCode, map[string]interface{}{"tt": tt, "response": response.String(), "k": k})
+		assert.Equal(t, tt.expectResp.Code, response.Code, map[string]interface{}{"tt": tt, "response": response.String(), "k": k})
+		assert.Equal(t, tt.expectResp.SubCode, response.SubCode, map[string]interface{}{"tt": tt, "response": response.String(), "k": k})
+		assert.Equal(t, tt.expectResp.Message, response.Message, map[string]interface{}{"tt": tt, "response": response.String(), "k": k})
+		assert.Equal(t, tt.expectResp.SubMsg, response.SubMsg, map[string]interface{}{"tt": tt, "response": response.String(), "k": k})
 		t.Log(response.String())
 	}
 }
@@ -1068,10 +1044,11 @@ func TestWeChatPayBatch(t *testing.T) {
 	}
 }
 
+// 测试网商银行通道不允许的收款类型
 func TestMaYiBankPayNotAllowPayeeChannelType(t *testing.T) {
 	f, err := cass.NewClient(factoryConf)
 	assert.Nil(t, err)
-	request := f.NewRequest(method.M.PayOneBankRemit)
+	request := f.NewRequest(context.PayOneBank)
 	request.SetBizParams(map[string]interface{}{
 		"payChannelK":      "1",
 		"payeeChannelType": "3",
@@ -1088,11 +1065,12 @@ func TestMaYiBankPayNotAllowPayeeChannelType(t *testing.T) {
 	response := f.Send(request).(*cass.Response)
 	assert.Nil(t, err)
 	assert.NotNil(t, response)
-	assert.Equal(t, 200, response.HTTP.StatusCode)
-	assert.Equal(t, "已选的属性 收款通道 非法", response.SubMsg)
-	t.Log(response.String())
+	assert.True(t, response.IsHTTPSuccess())
+	assert.False(t, response.IsBusinessSuccess())
+	assert.Equal(t, "已选的属性收款通道非法", response.SubMsg, response.String())
 }
 
+// 测试单笔微信支付
 func TestOneWeChatPay(t *testing.T) {
 	f, err := cass.NewClient(factoryConf)
 	assert.Nil(t, err)
@@ -1116,61 +1094,154 @@ func TestOneWeChatPay(t *testing.T) {
 	t.Log(response.String())
 }
 
-func TestPayToMaYi(t *testing.T) {
+// 查询批次
+func TestQueryBatch(t *testing.T) {
 	f, err := cass.NewClient(factoryConf)
 	assert.Nil(t, err)
-	request := f.NewRequest(method.M.PayBankRemit)
-	request.SetBizParams(map[string]interface{}{
-		"payChannelK":      "1",
-		"payeeChannelType": "1",
-		"orderData": [2]interface{}{
-			map[string]interface{}{
-				"orderSN":          uuid.New().String(),
-				"receiptFANO":      "6214860121221101",
-				"payeeAccount":     "李浩然",
-				"requestPayAmount": "80000",
-				"notifyUrl":        "http://www.baidu.com/a/b?a=b",
-				"identityCard":     "370404198511015755",
-			},
-			map[string]interface{}{
-				"orderSN":          uuid.New().String(),
-				"receiptFANO":      "6214860121221101",
-				"payeeAccount":     "李浩然",
-				"requestPayAmount": "90000",
-				"notifyUrl":        "http://www.baidu.com/a/b?a=b",
-				"identityCard":     "370404198511015755",
-			},
-		},
+	request := f.NewRequest(context.PayOneBank)
+	request.SetBizParams(context.PayOneBankBiz{
+		PayChannelK:      context.PayChannelBank,
+		PayeeChannelType: context.PayeeChannelBank,
+		OrderData: []context.PayOneBankOrder{{
+			OrderSN:          uuid.New().String(),
+			ReceiptFANO:      "6214850278508756",
+			PayeeAccount:     "詹光",
+			RequestPayAmount: "0.01",
+			NotifyUrl:        "http://localhost:8080",
+		}},
 	})
 	response := f.Send(request).(*cass.Response)
 	assert.Nil(t, err)
-	assert.NotNil(t, response)
-	assert.Equal(t, 200, response.HTTP.StatusCode)
-	t.Log(response.String())
+	assert.True(t, response.IsSuccess())
+	c := &context.PayOneBankContent{}
+	assert.Nil(t, response.Content(c))
+
+	query := f.NewRequest(context.QueryBatch)
+	query.SetBizParams(context.QueryBatchBiz{
+		RBUUID: c.RBUUID,
+	})
+	queryResp := f.Send(query).(*cass.Response)
+	assert.Nil(t, err)
+	assert.NotNil(t, queryResp)
+	batchC := &context.QueryBatchContent{}
+	assert.Nil(t, queryResp.Content(batchC))
+	assert.NotEmpty(t, batchC.RBUUID)
+	//assert.NotEmpty(t, batchC.SBSNCN)
+	assert.NotEmpty(t, batchC.TotalExpectAmount)
+	assert.NotEmpty(t, batchC.TotalRealPayAmount)
+	assert.NotEmpty(t, batchC.TotalServiceCharge)
+	assert.NotEmpty(t, batchC.DiscountAmount)
+	//assert.NotEmpty(t, batchC.Status)
+	//assert.NotEmpty(t, batchC.SubStatus)
+	//assert.NotEmpty(t, batchC.ResponseMsg)
+	assert.NotEmpty(t, batchC.OrderData)
+	assert.Equal(t, 1, len(batchC.OrderData))
+	for _, order := range batchC.OrderData {
+		assert.NotEmpty(t, order.OrderSN)
+		//assert.NotEmpty(t, order.Phone)
+		assert.NotEmpty(t, order.OrderUUID)
+		//assert.NotEmpty(t, order.OrderStatus)
+		//assert.NotEmpty(t, order.OrderFailStatus)
+		assert.NotEmpty(t, order.RequestPayAmount)
+		assert.NotEmpty(t, order.ActualPayAmount)
+		//assert.NotEmpty(t, order.ReachAt)
+		//assert.NotEmpty(t, order.OrderResponseMsg)
+	}
 }
 
-func TestGetUsersVerifyStatus(t *testing.T) {
+// 通过 orderUUID 查询订单
+func TestQueryOrderByUUID(t *testing.T) {
 	f, err := cass.NewClient(factoryConf)
 	assert.Nil(t, err)
-	request := f.NewRequest(method.M.GetUserVerifyStatus)
-	request.SetBizParams(map[string]interface{}{
-		"payChannelK":      "1",
-		"payeeChannelType": "1",
-		"orderData": [1]interface{}{
-			map[string]interface{}{
-				"orderSN":          uuid.New().String(),
-				"receiptFANO":      "6214850278508756",
-				"payeeAccount":     "13517210601",
-				"identityCard":     "420222199212041057",
-				"requestPayAmount": "0.01",
-				"notifyUrl":        "http://www.baidu.com/a/b?a=b",
-				"data":             "",
-			},
-		},
+	request := f.NewRequest(context.PayOneBank)
+	request.SetBizParams(context.PayOneBankBiz{
+		PayChannelK:      context.PayChannelBank,
+		PayeeChannelType: context.PayeeChannelBank,
+		OrderData: []context.PayOneBankOrder{{
+			OrderSN:          uuid.New().String(),
+			ReceiptFANO:      "6214850278508756",
+			PayeeAccount:     "詹光",
+			RequestPayAmount: "0.01",
+			NotifyUrl:        "http://localhost:8080",
+		}},
 	})
 	response := f.Send(request).(*cass.Response)
 	assert.Nil(t, err)
-	assert.NotNil(t, response)
-	assert.Equal(t, 200, response.HTTP.StatusCode)
-	t.Log(response.String())
+	assert.True(t, response.IsSuccess())
+	c := &context.PayOneBankContent{}
+	assert.Nil(t, response.Content(c))
+
+	query := f.NewRequest(context.QueryBatch)
+	query.SetBizParams(context.QueryBatchBiz{
+		RBUUID: c.RBUUID,
+	})
+	queryResp := f.Send(query).(*cass.Response)
+	assert.Nil(t, err)
+	assert.NotNil(t, queryResp)
+	batchC := &context.QueryBatchContent{}
+	assert.Nil(t, queryResp.Content(batchC))
+	assert.NotEmpty(t, batchC.RBUUID)
+	assert.NotEmpty(t, batchC.TotalExpectAmount)
+	assert.NotEmpty(t, batchC.TotalRealPayAmount)
+	assert.NotEmpty(t, batchC.TotalServiceCharge)
+	assert.NotEmpty(t, batchC.DiscountAmount)
+	assert.NotEmpty(t, batchC.OrderData)
+	assert.Equal(t, 1, len(batchC.OrderData))
+	for _, order := range batchC.OrderData {
+		assert.NotEmpty(t, order.OrderSN)
+		assert.NotEmpty(t, order.OrderUUID)
+		assert.NotEmpty(t, order.RequestPayAmount)
+		assert.NotEmpty(t, order.ActualPayAmount)
+	}
+
+	var orderUUID = batchC.OrderData[0].OrderUUID
+	queryOrderReq := f.NewRequest(context.QueryOrderByUUID)
+	queryOrderReq.SetBizParams(context.QueryOrderByUUIDBiz{
+		OrderUUID: orderUUID,
+	})
+	queryOrderResp := f.Send(queryOrderReq)
+	assert.Nil(t, queryOrderResp.Error())
+	t.Log(queryOrderResp.String())
+	queryOrderC := &context.QueryOrderByUUIDContent{}
+	assert.Nil(t, queryOrderResp.Content(queryOrderC))
+	assert.NotEmpty(t, queryOrderC.RBUUID)
+	assert.NotEmpty(t, queryOrderC.OrderUUID)
+	assert.NotEmpty(t, queryOrderC.OrderSN)
+}
+
+// 通过 orderSN 查询订单
+func TestQueryOrderBySN(t *testing.T) {
+	var orderSN = strings.ReplaceAll(uuid.New().String(), "-", "")
+	f, err := cass.NewClient(factoryConf)
+	assert.Nil(t, err)
+	request := f.NewRequest(context.PayOneBank)
+	request.SetBizParams(context.PayOneBankBiz{
+		PayChannelK:      context.PayChannelBank,
+		PayeeChannelType: context.PayeeChannelBank,
+		OrderData: []context.PayOneBankOrder{{
+			OrderSN:          orderSN,
+			ReceiptFANO:      "6214850278508756",
+			PayeeAccount:     "詹光",
+			RequestPayAmount: "0.01",
+			NotifyUrl:        "http://localhost:8080",
+		}},
+	})
+	response := f.Send(request).(*cass.Response)
+	assert.Nil(t, err)
+	assert.True(t, response.IsSuccess())
+	c := &context.PayOneBankContent{}
+	assert.Nil(t, response.Content(c))
+
+	queryOrderReq := f.NewRequest(context.QueryOrderBySN)
+	queryOrderReq.SetBizParams(context.QueryOrderBySNBiz{
+		OrderSN: orderSN,
+	})
+	queryOrderResp := f.Send(queryOrderReq)
+	assert.Nil(t, queryOrderResp.Error())
+	t.Log(queryOrderResp.String())
+	queryOrderC := &context.QueryOrderBySNContent{}
+	assert.Nil(t, queryOrderResp.Content(queryOrderC))
+	assert.NotEmpty(t, queryOrderC.RBUUID)
+	assert.NotEmpty(t, queryOrderC.OrderUUID)
+	assert.NotEmpty(t, queryOrderC.OrderSN)
 }

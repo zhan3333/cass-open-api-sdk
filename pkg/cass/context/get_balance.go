@@ -7,6 +7,8 @@ import (
 const PayChannelBank = "1"
 const PayChannelAliPay = "2"
 const PayChannelWeChat = "3"
+const PayeeChannelBank = "1"
+const PayeeChannelAliPay = "2"
 
 var GetBalance = method.Method{
 	Method: "Vzhuo.BcBalance.Get",

@@ -1,12 +1,5 @@
 package cass
 
-type PayOneBankRemitBiz struct {
-	PayChannelK      string      `json:"payChannelK" binding:"required,max=1" comment:" 付款通道：1-银行卡"`
-	PayeeChannelType string      `json:"payeeChannelType" binding:"max=1" comment:"收款通道： 网商银行为必填，1-银行卡，2-支付宝； 其他通道，收款与付款通道一致，不需要接 口传入数据。"`
-	ContractID       string      `json:"contractID,omitempty" binding:"" comment:"合同 ID"`
-	OrderData        []BankOrder `json:"orderData" binding:"required" comment:" 订单数据，二维数组"`
-}
-
 type PayBankRemitBiz struct {
 	PayChannelK      string      `json:"payChannelK" binding:"required,max=1" comment:" 付款通道：1-银行卡"`
 	PayeeChannelType string      `json:"payeeChannelType" binding:"max=1" comment:"收款通道： 网商银行为必填，1-银行卡，2-支付宝； 其他通道，收款与付款通道一致，不需要接 口传入数据。"`
@@ -45,15 +38,4 @@ type WeChatOrder struct {
 	RequestPayAmount string `json:"requestPayAmount" binding:"required,max=26" comment:"预期付款金额" example:"14.00"`
 	IdentityCard     string `json:"identityCard,omitempty" binding:"max=20" comment:"收款人身份证号" example:" 321123456789098765"`
 	NotifyUrl        string `json:"notifyUrl" binding:"required,max=255" comment:"网商银行必填，服务器异步通知页面路径。 对应异步通知的“银行卡实时下单”" example:" └notifyUrl String -- 255 网商银行必填，服务器异步通知页面路径。 对应异步通知的“银行卡实时下单” http://xxx.xxx.cn/xx/asynNotify.h tm"`
-}
-
-// 获取用户电签结果
-type GetUsersVerifyStatusBiz struct {
-	Items []GetUsersVerifyStatusItem
-}
-
-type GetUsersVerifyStatusItem struct {
-	IdentityCard string `json:"identity_card"`
-	ReceiptFANO  string `json:"receipt_fano"`
-	ReceiptType  string `json:"receipt_type"`
 }
