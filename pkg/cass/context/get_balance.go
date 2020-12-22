@@ -16,7 +16,7 @@ var GetBalance = method.Method{
 }
 
 type GetBalanceBiz struct {
-	Biz
+	Biz         `json:"-"`
 	PayChannelK string `json:"payChannelK"`
 }
 

@@ -58,6 +58,17 @@ func TestOneBankPay(t *testing.T) {
 	f, err := cass.NewClient(factoryConf)
 	assert.Nil(t, err)
 	request := f.NewRequest(context.PayOneBank)
+	//request.SetBizParams(context.PayOneBankBiz{
+	//	PayChannelK:      context.PayChannelBank,
+	//	PayeeChannelType: context.PayeeChannelBank,
+	//	OrderData: []context.PayOneBankOrder{{
+	//		OrderSN:          uuid.New().String(),
+	//		ReceiptFANO:      "6214850278508756",
+	//		PayeeAccount:     "詹光",
+	//		RequestPayAmount: "0.01",
+	//		NotifyUrl:        "http://localhost:8080",
+	//	}},
+	//})
 	request.SetBizParams(context.PayOneBankBiz{
 		PayChannelK:      context.PayChannelBank,
 		PayeeChannelType: context.PayeeChannelBank,
