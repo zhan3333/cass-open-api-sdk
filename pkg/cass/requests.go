@@ -39,3 +39,13 @@ type WeChatOrder struct {
 	IdentityCard     string `json:"identityCard,omitempty" binding:"max=20" comment:"收款人身份证号" example:" 321123456789098765"`
 	NotifyUrl        string `json:"notifyUrl" binding:"required,max=255" comment:"网商银行必填，服务器异步通知页面路径。 对应异步通知的“银行卡实时下单”" example:" └notifyUrl String -- 255 网商银行必填，服务器异步通知页面路径。 对应异步通知的“银行卡实时下单” http://xxx.xxx.cn/xx/asynNotify.h tm"`
 }
+
+type GetUserVerifyStatusItem struct {
+	IdentityCard string `json:"identityCard"`
+	ReceiptFANO  string `json:"receiptFANO"`
+	ReceiptType  int    `json:"receiptType"`
+}
+
+type GetUserVerifyStatusBiz struct {
+	Items []GetUserVerifyStatusItem `json:"items"`
+}

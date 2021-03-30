@@ -1,6 +1,8 @@
 package go_openapi_test
 
 import (
+	context2 "context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
@@ -10,7 +12,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 var factoryConf cass.Config
@@ -58,26 +62,15 @@ func TestOneBankPay(t *testing.T) {
 	f, err := cass.NewClient(factoryConf)
 	assert.Nil(t, err)
 	request := f.NewRequest(context.PayOneBank)
-	//request.SetBizParams(context.PayOneBankBiz{
-	//	PayChannelK:      context.PayChannelBank,
-	//	PayeeChannelType: context.PayeeChannelBank,
-	//	OrderData: []context.PayOneBankOrder{{
-	//		OrderSN:          uuid.New().String(),
-	//		ReceiptFANO:      "6214850278508756",
-	//		PayeeAccount:     "詹光",
-	//		RequestPayAmount: "0.01",
-	//		NotifyUrl:        "http://localhost:8080",
-	//	}},
-	//})
 	request.SetBizParams(context.PayOneBankBiz{
 		PayChannelK:      context.PayChannelBank,
-		PayeeChannelType: context.PayeeChannelBank,
+		PayeeChannelType: context.PayeeChannelAliPay,
 		OrderData: []context.PayOneBankOrder{{
 			OrderSN:          uuid.New().String(),
-			ReceiptFANO:      "6214850278508756",
-			PayeeAccount:     "詹光",
-			RequestPayAmount: "0.01",
-			NotifyUrl:        "http://localhost:8080",
+			ReceiptFANO:      "18807159036",
+			PayeeAccount:     "胡媛媛",
+			RequestPayAmount: "0.1",
+			NotifyUrl:        "http://www.baidu.com",
 		}},
 	})
 	response := f.Send(request).(*cass.Response)
@@ -1095,6 +1088,7 @@ func TestOneWeChatPay(t *testing.T) {
 				PayeeAccount:     "詹光",
 				RequestPayAmount: "1",
 				NotifyUrl:        "http://www.baidu.com/",
+				IdentityCard:     "420222199212041058",
 			},
 		},
 	})
@@ -1255,4 +1249,83 @@ func TestQueryOrderBySN(t *testing.T) {
 	assert.NotEmpty(t, queryOrderC.RBUUID)
 	assert.NotEmpty(t, queryOrderC.OrderUUID)
 	assert.NotEmpty(t, queryOrderC.OrderSN)
+}
+
+func TestConcurrentOneBankPay(t *testing.T) {
+	var wg sync.WaitGroup
+	ctx, cancel := context2.WithCancel(context2.Background())
+	var respChan = make(chan *cass.Response, 10)
+	wg.Add(1)
+	go func(ctx context2.Context, wg *sync.WaitGroup) {
+		defer wg.Done()
+		select {
+		case resp := <-respChan:
+			assert.NotNil(t, resp)
+			assert.Equal(t, 200, resp.HTTP.StatusCode)
+			t.Log(resp.String())
+			c := &context.PayOneBankContent{}
+			assert.Nil(t, resp.Content(c))
+			assert.NotEmpty(t, c.RBUUID)
+		case <-ctx.Done():
+			fmt.Println("resp handle end")
+			return
+		}
+	}(ctx, &wg)
+
+	payOne := func(ctx context2.Context, wg *sync.WaitGroup) {
+		defer wg.Done()
+		f, err := cass.NewClient(factoryConf)
+		assert.Nil(t, err)
+		request := f.NewRequest(context.PayOneBank)
+		request.SetBizParams(context.PayOneBankBiz{
+			PayChannelK:      context.PayChannelBank,
+			PayeeChannelType: context.PayeeChannelAliPay,
+			OrderData: []context.PayOneBankOrder{{
+				OrderSN:          uuid.New().String(),
+				ReceiptFANO:      "18807159036",
+				PayeeAccount:     "胡媛媛",
+				RequestPayAmount: "0.1",
+				NotifyUrl:        "http://www.baidu.com",
+			}},
+		})
+		response := f.Send(request).(*cass.Response)
+		respChan <- response
+	}
+
+	for i := 0; i < 60; i++ {
+		fmt.Printf("第 %d 波发起开始", i+1)
+		for j := 0; j < 10; j++ {
+			wg.Add(1)
+			go payOne(ctx, &wg)
+			fmt.Printf("发起第 %d 波 第 %d 笔订单", i+1, j+1)
+		}
+		time.Sleep(time.Second * 1)
+	}
+	wg.Wait()
+
+	fmt.Println("订单发起任务处理完毕")
+	// todo 取消的时间有问题
+	cancel()
+	fmt.Println("程序执行完成退出")
+}
+
+// 测试单笔微信支付
+func TestQueryAccount(t *testing.T) {
+	f, err := cass.NewClient(factoryConf)
+	assert.Nil(t, err)
+	request := f.NewRequest(method.M.GetUserVerifyStatus)
+	request.SetBizParams(cass.GetUserVerifyStatusBiz{
+		Items: []cass.GetUserVerifyStatusItem{
+			{
+				IdentityCard: "210303199207230029",
+				ReceiptFANO:  "15981527818",
+				ReceiptType:  2,
+			},
+		},
+	})
+	response := f.Send(request).(*cass.Response)
+	assert.Nil(t, err)
+	assert.NotNil(t, response)
+	assert.Equal(t, 200, response.HTTP.StatusCode)
+	t.Log(response.String())
 }
