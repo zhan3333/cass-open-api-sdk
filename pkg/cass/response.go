@@ -13,11 +13,11 @@ type Responder interface {
 	SetError(error)
 	HasError() bool
 	Content(context.Content) error
-	// 请求是否成功
+	// IsHTTPSuccess 请求是否成功
 	IsHTTPSuccess() bool
-	// 操作是否成功
+	// IsSuccess 操作是否成功
 	IsSuccess() bool
-	// 业务是否处理成功
+	// IsBusinessSuccess 业务是否处理成功
 	IsBusinessSuccess() bool
 }
 

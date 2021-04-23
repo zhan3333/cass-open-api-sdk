@@ -131,8 +131,10 @@ func (f *Client) Send(request Requester) Responder {
 		"application/html; charset=utf-8",
 		strings.NewReader(query),
 	)
+
+	resp := NewResponse(response, request.GetMethod().GetResponseKey(), err)
 	if f.Debug {
-		fmt.Printf("response: %+v; err: %+v\n", response, err)
+		fmt.Printf("response: %+v; err: %+v\n", resp, err)
 	}
-	return NewResponse(response, request.GetMethod().GetResponseKey(), err)
+	return resp
 }
